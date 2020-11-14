@@ -24,7 +24,7 @@
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim);
 
-void ws2812b_init(TIM_HandleTypeDef *timer);
+void ws2812b_init(TIM_HandleTypeDef *timer, uint32_t channel);
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b);
 

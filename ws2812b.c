@@ -4,6 +4,10 @@
 
 #include "ws2812b.h"
 
+// Timer handle
+TIM_HandleTypeDef *htim;
+uint32_t timer_channel;
+
 // Bunch of zeros used to latch the ws2812
 const uint16_t zeros[24] = {0}; // Used to trigger latching
 
@@ -369,11 +373,17 @@ void setLedValue(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
 
 }
 
-void ws2812b_init(TIM_HandleTypeDef *timer) {
+void ws2812b_init(TIM_HandleTypeDef *timer, uint32_t channel) {
+
+	// Store timer handle for later
+	htim = timer;
+
+	// Store channel
+	timer_channel = channel;
 
 	// Start DMA to feed the PWM with values
 	// At this point the buffer should be empty - all zeros
-	HAL_TIM_PWM_Start_DMA(timer, TIM_CHANNEL_1, (uint32_t*) dma_buffer,
+	HAL_TIM_PWM_Start_DMA(htim, timer_channel, (uint32_t*) dma_buffer,
 	BUFFER_SIZE * 2);
 
 }
