@@ -15,8 +15,8 @@
 #define LED_RES 0
 #define LED_DAT 1
 
-#define LED_ROWS 1
-#define LED_COLS 1
+//#define LED_ROWS 1
+//#define LED_COLS 1
 #define G 0
 #define R 1
 #define B 2
@@ -24,7 +24,7 @@
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim);
 
-void ws2812b_init(TIM_HandleTypeDef *timer, uint32_t channel);
+void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols);
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b);
 

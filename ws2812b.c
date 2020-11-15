@@ -1,12 +1,16 @@
 
 #include "main.h"
+#include <stdlib.h>
 #include <string.h>
 
 #include "ws2812b.h"
 
 // Timer handle
-TIM_HandleTypeDef *htim;
-uint32_t timer_channel;
+TIM_HandleTypeDef *timer;
+uint32_t channel;
+
+uint16_t rows = 0;
+uint16_t cols = 0;
 
 // Bunch of zeros used to latch the ws2812
 const uint16_t zeros[24] = {0}; // Used to trigger latching
@@ -279,12 +283,13 @@ uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
 uint16_t *dma_buffer_pointer;
 
 // Base for calculating RGB values
-float led_angle[LED_ROWS][LED_COLS][3] = { 0 };
-float led_velocity[LED_ROWS][LED_COLS][3] = { 0 };
-uint8_t led_amplitude[LED_ROWS][LED_COLS][3] = { 0 };
+//float led_angle[LED_ROWS][LED_COLS][3] = { 0 };
+//float led_velocity[LED_ROWS][LED_COLS][3] = { 0 };
+//uint8_t led_amplitude[LED_ROWS][LED_COLS][3] = { 0 };
 
 // LED RGB values
-uint8_t led_value[LED_ROWS][LED_COLS][3] = { 0 };
+//uint8_t led_value[LED_ROWS][LED_COLS][3] = { 0 };
+uint8_t *led_value;
 
 uint8_t led_state = LED_RES;
 uint8_t res_cnt = 0;
@@ -318,7 +323,7 @@ static inline void update_next_buffer() {
 	} else { // LED state
 
 		// First let's deal with the current LED
-		uint8_t *led = led_value[led_col][led_row];
+		uint8_t *led = (uint8_t *)(led_value + led_row * led_col);
 		for (uint8_t c = 0; c < 3; c++) { // This is the bitch - need to be optimized!
 
 			// Copy values from the pre-filled color_value buffer
@@ -329,10 +334,10 @@ static inline void update_next_buffer() {
 
 		// Now move to next LED switching to reset state when all leds have been updated
 		led_col++; // Next column
-		if (led_col >= LED_COLS) { // reached top
+		if (led_col >= cols) { // reached top
 			led_col = 0; // back to first
 			led_row++; // and move on to next row
-			if (led_row >= LED_ROWS) { // reached end
+			if (led_row >= rows) { // reached end
 
 				res_cnt = 0;
 				led_state = LED_RES;
@@ -367,23 +372,28 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 // handle updating the dma buffer when needed
 void setLedValue(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
 
-	led_value[col][row][R] = r;
-	led_value[col][row][G] = g;
-	led_value[col][row][B] = b;
+	led_value[col * row + R] = r;
+	led_value[col * row + G] = g;
+	led_value[col * row + B] = b;
 
 }
 
-void ws2812b_init(TIM_HandleTypeDef *timer, uint32_t channel) {
+void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols) {
 
 	// Store timer handle for later
-	htim = timer;
+	timer = init_timer;
 
 	// Store channel
-	timer_channel = channel;
+	channel = init_channel;
+
+	rows = init_rows;
+	cols = init_cols;
+
+	led_value = malloc(rows * cols * 3); // Space for led values
 
 	// Start DMA to feed the PWM with values
 	// At this point the buffer should be empty - all zeros
-	HAL_TIM_PWM_Start_DMA(htim, timer_channel, (uint32_t*) dma_buffer,
+	HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer,
 	BUFFER_SIZE * 2);
 
 }
