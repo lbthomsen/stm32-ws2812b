@@ -9,6 +9,7 @@
 TIM_HandleTypeDef *timer;
 uint32_t channel;
 
+// Rows and cols - set by init
 uint16_t rows = 0;
 uint16_t cols = 0;
 
@@ -287,8 +288,7 @@ uint16_t *dma_buffer_pointer;
 //float led_velocity[LED_ROWS][LED_COLS][3] = { 0 };
 //uint8_t led_amplitude[LED_ROWS][LED_COLS][3] = { 0 };
 
-// LED RGB values
-//uint8_t led_value[LED_ROWS][LED_COLS][3] = { 0 };
+// LED RGB values - malloc'ed in init when size is known
 uint8_t *led_value;
 
 uint8_t led_state = LED_RES;
@@ -368,9 +368,13 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
 }
 
+void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
+	led_value[col * row + led] = value;
+}
+
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
-void setLedValue(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
+void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
 
 	led_value[col * row + R] = r;
 	led_value[col * row + G] = g;
@@ -389,7 +393,7 @@ void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t
 	rows = init_rows;
 	cols = init_cols;
 
-	led_value = malloc(rows * cols * 3); // Space for led values
+	led_value = malloc(rows * cols * 3); // Memory for led values
 
 	// Start DMA to feed the PWM with values
 	// At this point the buffer should be empty - all zeros
