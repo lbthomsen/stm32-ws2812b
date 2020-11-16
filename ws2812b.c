@@ -22,7 +22,7 @@
 
 #include "ws2812b.h"
 
-// Timer handle
+// Timer handle and channel number
 TIM_HandleTypeDef *timer;
 uint32_t channel;
 
@@ -321,7 +321,7 @@ static inline void update_next_buffer() {
 	// A simple state machine - we're either resetting (two buffers worth of zeros) or
 	// we are transmitting data for the "current" led.
 
-	if (led_state == LED_RES) { // Reset state - 10 or more full buffers of zeros
+	if (led_state == LED_RES) { // Latch state - 10 or more full buffers of zeros
 
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer
