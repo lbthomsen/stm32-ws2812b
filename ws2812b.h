@@ -1,3 +1,20 @@
+/**
+  ******************************************************************************
+  * @file           : ws2812b.h
+  * @brief          : Ws2812b library header
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by lbthomsen under MIT license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/MIT
+  *
+  ******************************************************************************
+  */
 
 #ifndef __WS2812B_H
 #define __WS2812B_H

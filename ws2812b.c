@@ -1,3 +1,20 @@
+/**
+  ******************************************************************************
+  * @file           : ws2812b.c
+  * @brief          : Ws2812b library
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by lbthomsen under MIT license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/MIT
+  *
+  ******************************************************************************
+  */
 
 #include "main.h"
 #include <stdlib.h>
@@ -17,7 +34,8 @@ uint16_t cols = 0;
 const uint16_t zeros[24] = {0}; // Used to trigger latching
 
 // Look up table for led color bit patterns.  "Waste" 4k of flash but is a
-// lot faster (not measured accurately but I'd say about double).
+// lot faster (not measured accurately but I'd say about double) than bit
+// manipulation.
 const uint16_t color_value[256][8] = {
 		{LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF},
 		{LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_ON},
@@ -277,20 +295,17 @@ const uint16_t color_value[256][8] = {
 		{LED_ON, LED_ON, LED_ON, LED_ON, LED_ON, LED_ON, LED_ON, LED_ON}
 };
 
-// The actual DMA buffer - contains two halves each container 24 byte
+// The actual DMA buffer - contains two halves each containing 24 bytes - 48 bytes in total.
+// Used directly by the stm32 hardware to control pwm.
 uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
 
 // Pointer to above buffer.  This will be set to the start of the half way point
 uint16_t *dma_buffer_pointer;
 
-// Base for calculating RGB values
-//float led_angle[LED_ROWS][LED_COLS][3] = { 0 };
-//float led_velocity[LED_ROWS][LED_COLS][3] = { 0 };
-//uint8_t led_amplitude[LED_ROWS][LED_COLS][3] = { 0 };
-
 // LED RGB values - malloc'ed in init when size is known
 uint8_t *led_value;
 
+// Variables controlling the state machine.
 uint8_t led_state = LED_RES;
 uint8_t res_cnt = 0;
 uint8_t led_col = 0;
@@ -304,17 +319,17 @@ uint8_t led_row = 0;
 static inline void update_next_buffer() {
 
 	// A simple state machine - we're either resetting (two buffers worth of zeros) or
-	// we are transmitting data
+	// we are transmitting data for the "current" led.
 
 	if (led_state == LED_RES) { // Reset state - 10 or more full buffers of zeros
 
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer
-		memcpy(dma_buffer_pointer, zeros, 48);
+		memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
 
 		res_cnt++;
 
-		if (res_cnt >= LED_RESET_CYCLES) { // done enough reset cycles
+		if (res_cnt >= LED_RESET_CYCLES) { // done enough reset cycles - move to next state
 			led_col = 0;	// prepare to send data
 			led_row = 0;
 			led_state = LED_DAT;
@@ -324,11 +339,11 @@ static inline void update_next_buffer() {
 
 		// First let's deal with the current LED
 		uint8_t *led = (uint8_t *)(led_value + led_row * led_col);
-		for (uint8_t c = 0; c < 3; c++) { // This is the bitch - need to be optimized!
+		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
 			// Copy values from the pre-filled color_value buffer
-			memcpy(dma_buffer_pointer, color_value[led[c]], 16);
-			dma_buffer_pointer += 8;
+			memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
+			dma_buffer_pointer += 8; // next 8 bytes
 
 		}
 
@@ -337,8 +352,7 @@ static inline void update_next_buffer() {
 		if (led_col >= cols) { // reached top
 			led_col = 0; // back to first
 			led_row++; // and move on to next row
-			if (led_row >= rows) { // reached end
-
+			if (led_row >= rows) { // reached end - change to latch state
 				res_cnt = 0;
 				led_state = LED_RES;
 			}
