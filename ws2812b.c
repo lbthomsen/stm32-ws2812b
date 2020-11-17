@@ -318,6 +318,10 @@ uint8_t led_row = 0;
  */
 static inline void update_next_buffer() {
 
+	#ifdef BUFF_GPIO_Port
+		HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
+	#endif
+
 	// A simple state machine - we're either resetting (two buffers worth of zeros) or
 	// we are transmitting data for the "current" led.
 
@@ -359,6 +363,10 @@ static inline void update_next_buffer() {
 		}
 
 	}
+
+	#ifdef BUFF_GPIO_Port
+		HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_RESET);
+	#endif
 
 }
 
