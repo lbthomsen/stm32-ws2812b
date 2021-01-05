@@ -47,6 +47,11 @@ uint8_t res_cnt = 0;
 uint8_t led_col = 0;
 uint8_t led_row = 0;
 
+// Bit of optimization stuff to avoid unnecessary work
+uint8_t zero_halves = 2; // 0, 1 or 2 - since buffer is already zero no need to bother
+bool is_dirty = false;
+bool is_transferring = false;
+
 /*
  * Update next 24 bits in the dma buffer - assume dma_buffer_pointer is pointing
  * to the buffer that is safe to update.
@@ -64,8 +69,11 @@ static inline void update_next_buffer() {
 	if (led_state == LED_RES) { // Latch state - 10 or more full buffers of zeros
 
 		// This one is simple - we got a bunch of zeros of the right size - just throw
-		// that into the buffer
-		memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
+		// that into the buffer.  Twice will do (two half buffers).
+		if (zero_halves < 2) {
+			memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
+			zero_halves++;
+		}
 
 		res_cnt++;
 
@@ -76,6 +84,10 @@ static inline void update_next_buffer() {
 		}
 
 	} else { // LED state
+
+
+		// Since we're messing with the buffer, need to make sure it is zeroed at next latch
+		zero_halves = 0;
 
 		// First let's deal with the current LED
 		uint8_t *led = (uint8_t *)(led_value + led_row * led_col);
@@ -128,6 +140,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
 	led_value[col * row + led] = value;
+	is_dirty = true;
 }
 
 // Just throw values into led_value array - the dma interrupt will
