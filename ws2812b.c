@@ -19,6 +19,7 @@
 #include "main.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "color_values.h"
 #include "ws2812b.h"
