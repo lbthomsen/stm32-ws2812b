@@ -72,7 +72,8 @@ static inline void update_next_buffer() {
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer.  Twice will do (two half buffers).
 		if (zero_halves < 2) {
-			memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
+			//memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
+			memset(dma_buffer_pointer, 0, 48);
 			zero_halves++;
 		}
 
