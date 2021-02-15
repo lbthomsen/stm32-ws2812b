@@ -92,11 +92,13 @@ static inline void update_next_buffer() {
 		zero_halves = 0;
 
 		// First let's deal with the current LED
-		uint8_t *led = (uint8_t *)(led_value + led_row * led_col);
+		uint8_t *led = (uint8_t *)(led_value + led_row + led_col * led_row);
+
 		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
 			// Copy values from the pre-filled color_value buffer
 			memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
+			//led++;
 			dma_buffer_pointer += 8; // next 8 bytes
 
 		}
@@ -167,6 +169,7 @@ void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t
 	cols = init_cols;
 
 	led_value = malloc(rows * cols * 3); // Memory for led values
+	memset(led_value, 0, rows * cols * 3); // Zero it all
 
 	// Start DMA to feed the PWM with values
 	// At this point the buffer should be empty - all zeros
