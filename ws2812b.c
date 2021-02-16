@@ -72,8 +72,7 @@ static inline void update_next_buffer() {
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer.  Twice will do (two half buffers).
 		if (zero_halves < 2) {
-			//memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
-			memset(dma_buffer_pointer, 0, 48);
+			memset(dma_buffer_pointer, 0, 48); // That's be 24 uint16_t values
 			zero_halves++;
 		}
 
@@ -92,13 +91,13 @@ static inline void update_next_buffer() {
 		zero_halves = 0;
 
 		// First let's deal with the current LED
-		uint8_t *led = (uint8_t *)(led_value + led_row + led_col * led_row);
+		uint8_t *led = (uint8_t *)&led_value[led_col + (cols * led_row)];
 
 		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
 			// Copy values from the pre-filled color_value buffer
+			//memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
 			memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
-			//led++;
 			dma_buffer_pointer += 8; // next 8 bytes
 
 		}
@@ -143,18 +142,17 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
-	led_value[col * row + led] = value;
+	led_value[col + (cols * row) + led] = value;
 	is_dirty = true;
 }
 
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
 void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
-
-	led_value[col * row + R] = r;
-	led_value[col * row + G] = g;
-	led_value[col * row + B] = b;
-
+	led_value[col + (cols * row) + R] = r;
+	led_value[col + (cols * row) + G] = g;
+	led_value[col + (cols * row) + B] = b;
+	is_dirty = true;
 }
 
 void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols) {
