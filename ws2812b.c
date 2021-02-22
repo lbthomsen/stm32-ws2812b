@@ -166,7 +166,7 @@ void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t
 	rows = init_rows;
 	cols = init_cols;
 
-	led_value = malloc(rows * cols * 3); // Memory for led values
+	led_value = calloc(rows * cols * 3, 1); // Memory for led values
 	memset(led_value, 0, rows * cols * 3); // Zero it all
 
 	// Start DMA to feed the PWM with values
