@@ -73,7 +73,7 @@ static inline void update_next_buffer() {
 		// that into the buffer.  Twice will do (two half buffers).
 		if (zero_halves < 2) {
 			//memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
-			memset(dma_buffer_pointer, 0, 48);
+			memset(dma_buffer_pointer, 0, 48); // Probably quicker than the memcpy above
 			zero_halves++;
 		}
 
@@ -86,10 +86,6 @@ static inline void update_next_buffer() {
 		}
 
 	} else { // LED state
-
-
-		// Since we're messing with the buffer, need to make sure it is zeroed at next latch
-		zero_halves = 0;
 
 		// First let's deal with the current LED
 		uint8_t *led = (uint8_t *)(led_value + led_row * led_col);
@@ -107,6 +103,7 @@ static inline void update_next_buffer() {
 			led_col = 0; // back to first
 			led_row++; // and move on to next row
 			if (led_row >= rows) { // reached end - change to latch state
+				zero_halves = 0;
 				res_cnt = 0;
 				led_state = LED_RES;
 			}
@@ -167,6 +164,7 @@ void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t
 	cols = init_cols;
 
 	led_value = malloc(rows * cols * 3); // Memory for led values
+	memset(led_value, 0, rows * cols * 3);
 
 	// Start DMA to feed the PWM with values
 	// At this point the buffer should be empty - all zeros
