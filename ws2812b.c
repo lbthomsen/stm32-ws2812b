@@ -1,20 +1,20 @@
 /**
-  ******************************************************************************
-  * @file           : ws2812b.c
-  * @brief          : Ws2812b library
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by lbthomsen under MIT license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/MIT
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : ws2812b.c
+ * @brief          : Ws2812b library
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by lbthomsen under MIT license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/MIT
+ *
+ ******************************************************************************
+ */
 
 #include "main.h"
 #include <stdlib.h>
@@ -60,9 +60,9 @@ bool is_transferring = false;
  */
 static inline void update_next_buffer() {
 
-	#ifdef BUFF_GPIO_Port
-		HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
-	#endif
+#ifdef BUFF_GPIO_Port
+	HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
+#endif
 
 	// A simple state machine - we're either resetting (two buffers worth of zeros) or
 	// we are transmitting data for the "current" led.
@@ -72,12 +72,8 @@ static inline void update_next_buffer() {
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer.  Twice will do (two half buffers).
 		if (zero_halves < 2) {
-<<<<<<< HEAD
 			//memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
 			memset(dma_buffer_pointer, 0, 48); // Probably quicker than the memcpy above
-=======
-			memset(dma_buffer_pointer, 0, 48); // That's be 24 uint16_t values
->>>>>>> 03b37861131e3cbd2bf293e75e4af4656857de35
 			zero_halves++;
 		}
 
@@ -92,7 +88,7 @@ static inline void update_next_buffer() {
 	} else { // LED state
 
 		// First let's deal with the current LED
-		uint8_t *led = (uint8_t *)&led_value[led_col + (cols * led_row)];
+		uint8_t *led = (uint8_t*) &led_value[led_col + (cols * led_row)];
 
 		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
@@ -117,9 +113,9 @@ static inline void update_next_buffer() {
 
 	}
 
-	#ifdef BUFF_GPIO_Port
-		HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_RESET);
-	#endif
+#ifdef BUFF_GPIO_Port
+	HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_RESET);
+#endif
 
 }
 
@@ -151,13 +147,17 @@ void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
 void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
-	led_value[col + (cols * row) + R] = r;
-	led_value[col + (cols * row) + G] = g;
-	led_value[col + (cols * row) + B] = b;
+	//led_value[col + (cols * row) + R] = (uint8_t)r;
+	//led_value[col + (cols * row) + G] = (uint8_t)g;
+	//led_value[col + (cols * row) + B] = (uint8_t)b;
+	*(uint8_t *)(led_value + cols * row + col + R) = r;
+	*(uint8_t *)(led_value + cols * row + col + G) = g;
+	*(uint8_t *)(led_value + cols * row + col + B) = b;
 	is_dirty = true;
 }
 
-void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols) {
+uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
+		uint16_t init_rows, uint16_t init_cols) {
 
 	// Store timer handle for later
 	timer = init_timer;
@@ -168,17 +168,17 @@ void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t
 	rows = init_rows;
 	cols = init_cols;
 
-<<<<<<< HEAD
-	led_value = malloc(rows * cols * 3); // Memory for led values
-	memset(led_value, 0, rows * cols * 3);
-=======
-	led_value = calloc(rows * cols * 3, 1); // Memory for led values
-	memset(led_value, 0, rows * cols * 3); // Zero it all
->>>>>>> 03b37861131e3cbd2bf293e75e4af4656857de35
+	led_value = malloc(rows * cols * 3);
+	if (led_value != NULL) { // Memory for led values
+		memset(led_value, 0, rows * cols * 3); // Zero it all
 
-	// Start DMA to feed the PWM with values
-	// At this point the buffer should be empty - all zeros
-	HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer,
-	BUFFER_SIZE * 2);
+		// Start DMA to feed the PWM with values
+		// At this point the buffer should be empty - all zeros
+		HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer,
+		BUFFER_SIZE * 2);
+		return WS2812B_INIT_OK;
+	} else {
+		return WS2812B_INIT_MEM;
+	}
 
 }

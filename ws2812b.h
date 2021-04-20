@@ -35,6 +35,9 @@
 #define R 1
 #define B 2
 
+#define WS2812B_INIT_OK 0
+#define WS2812B_INIT_MEM 1
+
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim);
 
@@ -45,7 +48,7 @@ typedef struct {
 	uint32_t channel1;
 } ws2823b_init_TypeDef;
 
-void ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols);
+uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols);
 
 // Set a single led value
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value);
