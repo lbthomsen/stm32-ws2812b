@@ -88,7 +88,7 @@ static inline void update_next_buffer() {
 	} else { // LED state
 
 		// First let's deal with the current LED
-		uint8_t *led = (uint8_t*) &led_value[led_col + (cols * led_row)];
+		uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
 
 		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
@@ -140,19 +140,16 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
-	led_value[col + (cols * row) + led] = value;
+	led_value[3 * (col + (cols * row)) + led] = value;
 	is_dirty = true;
 }
 
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
 void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
-	//led_value[col + (cols * row) + R] = (uint8_t)r;
-	//led_value[col + (cols * row) + G] = (uint8_t)g;
-	//led_value[col + (cols * row) + B] = (uint8_t)b;
-	*(uint8_t *)(led_value + cols * row + col + R) = r;
-	*(uint8_t *)(led_value + cols * row + col + G) = g;
-	*(uint8_t *)(led_value + cols * row + col + B) = b;
+	led_value[3 * (col + (cols * row)) + RL] = r;
+	led_value[3 * (col + (cols * row)) + GL] = g;
+	led_value[3 * (col + (cols * row)) + BL] = b;
 	is_dirty = true;
 }
 

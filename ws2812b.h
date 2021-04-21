@@ -25,15 +25,15 @@
 // LED on/off counts.  PWM timer is running 104 counts.
 #define LED_OFF 27
 #define LED_ON 61
-#define LED_RESET_CYCLES 10 // Full 24-bit cycles
+#define LED_RESET_CYCLES 100 // Full 24-bit cycles
 
 // Define LED driver state machine states
 #define LED_RES 0
 #define LED_DAT 1
 
-#define G 0
-#define R 1
-#define B 2
+#define GL 0 // Green LED
+#define RL 1 // Red LED
+#define BL 2 // Blue LED
 
 #define WS2812B_INIT_OK 0
 #define WS2812B_INIT_MEM 1
