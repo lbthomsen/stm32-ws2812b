@@ -87,28 +87,41 @@ static inline void update_next_buffer() {
 
 	} else { // LED state
 
-		// First let's deal with the current LED
-		uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
+		if (is_dirty || is_transferring) {
 
-		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
-
-			// Copy values from the pre-filled color_value buffer
-			//memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
-			memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
-			dma_buffer_pointer += 8; // next 8 bytes
-
-		}
-
-		// Now move to next LED switching to reset state when all leds have been updated
-		led_col++; // Next column
-		if (led_col >= cols) { // reached top
-			led_col = 0; // back to first
-			led_row++; // and move on to next row
-			if (led_row >= rows) { // reached end - change to latch state
-				zero_halves = 0;
-				res_cnt = 0;
-				led_state = LED_RES;
+			if (!is_transferring) { // We are ditry but not transferring
+				is_transferring = true;
+				is_dirty = false;
 			}
+
+			// First let's deal with the current LED
+			uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
+
+			for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
+
+				// Copy values from the pre-filled color_value buffer
+				//memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
+				memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
+				dma_buffer_pointer += 8; // next 8 bytes
+
+			}
+
+			// Now move to next LED switching to reset state when all leds have been updated
+			led_col++; // Next column
+			if (led_col >= cols) { // reached top
+				led_col = 0; // back to first
+				led_row++; // and move on to next row
+				if (led_row >= rows) { // reached end - change to latch state
+					is_transferring = false; // We are done transferring - next cycle will begin again if buffer is dirty
+					zero_halves = 0;
+					res_cnt = 0;
+					led_state = LED_RES;
+				}
+			}
+
+		} else { // Let's jump back to reset phase
+			res_cnt = 0;
+			led_state = LED_RES;
 		}
 
 	}
@@ -137,6 +150,11 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 		update_next_buffer();
 	}
 
+}
+
+void zeroLedValues() {
+	memset(led_value, 0, rows * cols * 3); // Zero it all
+	is_dirty = true;
 }
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {

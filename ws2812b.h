@@ -25,7 +25,7 @@
 // LED on/off counts.  PWM timer is running 104 counts.
 #define LED_OFF 27
 #define LED_ON 61
-#define LED_RESET_CYCLES 100 // Full 24-bit cycles
+#define LED_RESET_CYCLES 10 // Full 24-bit cycles
 
 // Define LED driver state machine states
 #define LED_RES 0
@@ -49,6 +49,9 @@ typedef struct {
 } ws2823b_init_TypeDef;
 
 uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols);
+
+// Set all led values to zero
+void zeroLedValues();
 
 // Set a single led value
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value);
