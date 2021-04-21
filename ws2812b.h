@@ -23,8 +23,8 @@
 #define BUFFER_SIZE 24
 
 // LED on/off counts.  PWM timer is running 104 counts.
-#define LED_OFF 27
-#define LED_ON 74
+#define LED_OFF 1 * LED_CNT / 3 - 1
+#define LED_ON 2 * LED_CNT / 3 + 2
 #define LED_RESET_CYCLES 10 // Full 24-bit cycles
 
 // Define LED driver state machine states

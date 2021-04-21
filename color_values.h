@@ -10,9 +10,6 @@
 
 #include "ws2812b.h"
 
-// Bunch of zeros used to latch the ws2812
-//const uint16_t zeros[24] = {0}; // Used to trigger latching
-
 // Look up table for led color bit patterns.  "Waste" 4k of flash but is a
 // lot faster (not measured accurately but I'd say about double) than bit
 // manipulation.

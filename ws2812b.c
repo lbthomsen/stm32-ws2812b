@@ -36,10 +36,10 @@ uint16_t cols = 0;
 // Used directly by the stm32 hardware to control pwm.
 uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
 
-// Pointer to above buffer.  This will be set to the start of the half way point
+// Pointer to above buffer.  This will be set to the start or the half way point in turn
 uint16_t *dma_buffer_pointer;
 
-// LED RGB values - malloc'ed in init when size is known
+// LED RGB values - malloc'ed in init when size is known.  3 bytes per led.
 uint8_t *led_value;
 
 // Variables controlling the state machine.
@@ -49,13 +49,14 @@ uint8_t led_col = 0;
 uint8_t led_row = 0;
 
 // Bit of optimization stuff to avoid unnecessary work
-uint8_t zero_halves = 2; // 0, 1 or 2 - since buffer is already zero no need to bother
-bool is_dirty = false;
-bool is_transferring = false;
+uint8_t zero_halves = 2;       // 0, 1 or 2 - since buffer is already zero no need to bother
+bool is_dirty = false;         // Dirty is set true when led_value array is updated.
+bool is_transferring = false;  // Set while transferring "current" buffer.
 
 /*
  * Update next 24 bits in the dma buffer - assume dma_buffer_pointer is pointing
- * to the buffer that is safe to update.
+ * to the buffer that is safe to update.  The dma_buffer_pointer and the call to
+ * this function is handled by the dma callbacks.
  *
  */
 static inline void update_next_buffer() {
@@ -72,9 +73,8 @@ static inline void update_next_buffer() {
 		// This one is simple - we got a bunch of zeros of the right size - just throw
 		// that into the buffer.  Twice will do (two half buffers).
 		if (zero_halves < 2) {
-			//memcpy(dma_buffer_pointer, zeros, 48); // That's be 24 uint16_t values
-			memset(dma_buffer_pointer, 0, 48); // Probably quicker than the memcpy above
-			zero_halves++;
+			memset(dma_buffer_pointer, 0, 48); // Fill the buffer with zeros
+			zero_halves++; // We only need to update two half buffers
 		}
 
 		res_cnt++;
@@ -100,7 +100,6 @@ static inline void update_next_buffer() {
 			for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
 				// Copy values from the pre-filled color_value buffer
-				//memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
 				memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
 				dma_buffer_pointer += 8; // next 8 bytes
 
@@ -135,7 +134,7 @@ static inline void update_next_buffer() {
 // Done sending first half of the DMA buffer - this can now safely be updated
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
 
-	if (htim->Instance == TIM3) {
+	if (htim->Instance == timer->Instance) {
 		dma_buffer_pointer = &dma_buffer[0];
 		update_next_buffer();
 	}
@@ -145,7 +144,7 @@ void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
 // Done sending the second half of the DMA buffer - this can now be safely updated
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
-	if (htim->Instance == TIM3) {
+	if (htim->Instance == timer->Instance) {
 		dma_buffer_pointer = &dma_buffer[BUFFER_SIZE];
 		update_next_buffer();
 	}
