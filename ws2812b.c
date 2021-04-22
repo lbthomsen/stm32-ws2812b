@@ -157,17 +157,21 @@ void zeroLedValues() {
 }
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
-	led_value[3 * (col + (cols * row)) + led] = value;
-	is_dirty = true;
+	if (col < cols && row < rows) {
+		led_value[3 * (col + (cols * row)) + led] = value;
+		is_dirty = true;
+	}
 }
 
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
 void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
-	led_value[3 * (col + (cols * row)) + RL] = r;
-	led_value[3 * (col + (cols * row)) + GL] = g;
-	led_value[3 * (col + (cols * row)) + BL] = b;
-	is_dirty = true;
+	if (col < cols && row < rows) {
+		led_value[3 * (col + (cols * row)) + RL] = r;
+		led_value[3 * (col + (cols * row)) + GL] = g;
+		led_value[3 * (col + (cols * row)) + BL] = b;
+		is_dirty = true;
+	}
 }
 
 uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
