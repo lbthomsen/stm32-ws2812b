@@ -28,8 +28,9 @@
 #define LED_RESET_CYCLES 10 // Full 24-bit cycles
 
 // Define LED driver state machine states
-#define LED_RES 0
-#define LED_DAT 1
+#define LED_RES 0 // Reset
+#define LED_IDL 1 // Idle
+#define LED_DAT 2 // Transfer data
 
 #define GL 0 // Green LED
 #define RL 1 // Red LED

@@ -82,9 +82,19 @@ static inline void update_next_buffer() {
 		if (res_cnt >= LED_RESET_CYCLES) { // done enough reset cycles - move to next state
 			led_col = 0;	// prepare to send data
 			led_row = 0;
-			led_state = LED_DAT;
+			if (is_dirty) {
+				led_state = LED_DAT;
+			} else {
+				led_state = LED_IDL;
+			}
 		}
 
+	} else if (led_state == LED_IDL) {
+		if (is_dirty) {
+			is_dirty = false;
+			is_transferring = true;
+			led_state = LED_DAT;
+		}
 	} else { // LED state
 
 		if (is_dirty || is_transferring) {
