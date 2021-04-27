@@ -49,9 +49,8 @@ uint8_t led_col = 0;
 uint8_t led_row = 0;
 
 // Bit of optimization stuff to avoid unnecessary work
-uint8_t zero_halves = 2;       // 0, 1 or 2 - since buffer is already zero no need to bother
-bool is_dirty = false;         // Dirty is set true when led_value array is updated.
-bool is_transferring = false;  // Set while transferring "current" buffer.
+uint8_t zero_halves = 2; // 0, 1 or 2 - since buffer is already zero no need to bother
+bool is_dirty = false;     // Dirty is set true when led_value array is updated.
 
 /*
  * Update next 24 bits in the dma buffer - assume dma_buffer_pointer is pointing
@@ -65,7 +64,8 @@ static inline void update_next_buffer() {
 	HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
 #endif
 
-	// A simple state machine - we're either resetting (two buffers worth of zeros) or
+	// A simple state machine - we're either resetting (two buffers worth of zeros),
+	// idle (just winging out zero buffers) or
 	// we are transmitting data for the "current" led.
 
 	if (led_state == LED_RES) { // Latch state - 10 or more full buffers of zeros
@@ -83,6 +83,7 @@ static inline void update_next_buffer() {
 			led_col = 0;	// prepare to send data
 			led_row = 0;
 			if (is_dirty) {
+				is_dirty = false;
 				led_state = LED_DAT;
 			} else {
 				led_state = LED_IDL;
@@ -92,45 +93,31 @@ static inline void update_next_buffer() {
 	} else if (led_state == LED_IDL) {
 		if (is_dirty) {
 			is_dirty = false;
-			is_transferring = true;
 			led_state = LED_DAT;
 		}
 	} else { // LED state
 
-		if (is_dirty || is_transferring) {
+		// First let's deal with the current LED
+		uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
 
-			if (!is_transferring) { // We are ditry but not transferring
-				is_transferring = true;
-				is_dirty = false;
+		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
+
+			// Copy values from the pre-filled color_value buffer
+			memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
+			dma_buffer_pointer += 8; // next 8 bytes
+
+		}
+
+		// Now move to next LED switching to reset state when all leds have been updated
+		led_col++; // Next column
+		if (led_col >= cols) { // reached top
+			led_col = 0; // back to first
+			led_row++; // and move on to next row
+			if (led_row >= rows) { // reached end - change to latch state
+				zero_halves = 0;
+				res_cnt = 0;
+				led_state = LED_RES;
 			}
-
-			// First let's deal with the current LED
-			uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
-
-			for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
-
-				// Copy values from the pre-filled color_value buffer
-				memcpy(dma_buffer_pointer, color_value[led[c]], 16); // Lookup the actual buffer data
-				dma_buffer_pointer += 8; // next 8 bytes
-
-			}
-
-			// Now move to next LED switching to reset state when all leds have been updated
-			led_col++; // Next column
-			if (led_col >= cols) { // reached top
-				led_col = 0; // back to first
-				led_row++; // and move on to next row
-				if (led_row >= rows) { // reached end - change to latch state
-					is_transferring = false; // We are done transferring - next cycle will begin again if buffer is dirty
-					zero_halves = 0;
-					res_cnt = 0;
-					led_state = LED_RES;
-				}
-			}
-
-		} else { // Let's jump back to reset phase
-			res_cnt = 0;
-			led_state = LED_RES;
 		}
 
 	}
@@ -163,13 +150,13 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
 void zeroLedValues() {
 	memset(led_value, 0, rows * cols * 3); // Zero it all
-	is_dirty = true;
+	is_dirty = true; // Mark buffer dirty
 }
 
 void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
 	if (col < cols && row < rows) {
 		led_value[3 * (col + (cols * row)) + led] = value;
-		is_dirty = true;
+		is_dirty = true; // Mark buffer dirty
 	}
 }
 
@@ -180,7 +167,7 @@ void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
 		led_value[3 * (col + (cols * row)) + RL] = r;
 		led_value[3 * (col + (cols * row)) + GL] = g;
 		led_value[3 * (col + (cols * row)) + BL] = b;
-		is_dirty = true;
+		is_dirty = true; // Mark buffer dirty
 	}
 }
 

@@ -1,20 +1,20 @@
 /**
-  ******************************************************************************
-  * @file           : ws2812b.h
-  * @brief          : Ws2812b library header
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by lbthomsen under MIT license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/MIT
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : ws2812b.h
+ * @brief          : Ws2812b library header
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by lbthomsen under MIT license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/MIT
+ *
+ ******************************************************************************
+ */
 
 #ifndef __WS2812B_H
 #define __WS2812B_H
@@ -49,7 +49,8 @@ typedef struct {
 	uint32_t channel1;
 } ws2823b_init_TypeDef;
 
-uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_rows, uint16_t init_cols);
+uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
+		uint16_t init_rows, uint16_t init_cols);
 
 // Set all led values to zero
 void zeroLedValues();
