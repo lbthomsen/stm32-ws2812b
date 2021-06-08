@@ -16,6 +16,11 @@
  ******************************************************************************
  */
 
+/**
+ * Notice, a timer with a DMA driven PWM output will need to be configured
+ * before this library is initialized.
+ */
+
 #include "main.h"
 #include <stdlib.h>
 #include <string.h>
@@ -90,11 +95,13 @@ static inline void update_next_buffer() {
 			}
 		}
 
-	} else if (led_state == LED_IDL) {
-		if (is_dirty) {
+	} else if (led_state == LED_IDL) { // idle state
+
+		if (is_dirty) { // we do nothing here except waiting for a dirty flag
 			is_dirty = false;
-			led_state = LED_DAT;
+			led_state = LED_DAT; // when dirty - start processing data
 		}
+
 	} else { // LED state
 
 		// First let's deal with the current LED
@@ -185,6 +192,7 @@ uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
 
 	led_value = malloc(rows * cols * 3);
 	if (led_value != NULL) { // Memory for led values
+
 		memset(led_value, 0, rows * cols * 3); // Zero it all
 
 		// Start DMA to feed the PWM with values
