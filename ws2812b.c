@@ -34,8 +34,7 @@ TIM_HandleTypeDef *timer;
 uint32_t channel;
 
 // Rows and cols - set by init
-uint16_t rows = 0;
-uint16_t cols = 0;
+uint16_t leds = 0;
 
 // The actual DMA buffer - contains two halves each containing 24 bytes - 48 bytes in total.
 // Used directly by the stm32 hardware to control pwm.
@@ -50,8 +49,7 @@ uint8_t *led_value;
 // Variables controlling the state machine.
 uint8_t led_state = LED_RES;
 uint8_t res_cnt = 0;
-uint8_t led_col = 0;
-uint8_t led_row = 0;
+uint8_t led_cnt = 0;
 
 // Bit of optimization stuff to avoid unnecessary work
 uint8_t zero_halves = 2; // 0, 1 or 2 - since buffer is already zero no need to bother
@@ -85,8 +83,7 @@ static inline void update_next_buffer() {
 		res_cnt++;
 
 		if (res_cnt >= LED_RESET_CYCLES) { // done enough reset cycles - move to next state
-			led_col = 0;	// prepare to send data
-			led_row = 0;
+			led_cnt = 0;	// prepare to send data
 			if (is_dirty) {
 				is_dirty = false;
 				led_state = LED_DAT;
@@ -105,7 +102,7 @@ static inline void update_next_buffer() {
 	} else { // LED state
 
 		// First let's deal with the current LED
-		uint8_t *led = (uint8_t*) &led_value[3 * (led_col + (cols * led_row))];
+		uint8_t *led = (uint8_t*) &led_value[3 * led_cnt];
 
 		for (uint8_t c = 0; c < 3; c++) { // Deal with the 3 color leds in one led package
 
@@ -116,15 +113,12 @@ static inline void update_next_buffer() {
 		}
 
 		// Now move to next LED switching to reset state when all leds have been updated
-		led_col++; // Next column
-		if (led_col >= cols) { // reached top
-			led_col = 0; // back to first
-			led_row++; // and move on to next row
-			if (led_row >= rows) { // reached end - change to latch state
-				zero_halves = 0;
-				res_cnt = 0;
-				led_state = LED_RES;
-			}
+		led_cnt++; // Next led
+		if (led_cnt >= leds) { // reached top
+			led_cnt = 0; // back to first
+			zero_halves = 0;
+			res_cnt = 0;
+			led_state = LED_RES;
 		}
 
 	}
@@ -156,30 +150,30 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void zeroLedValues() {
-	memset(led_value, 0, rows * cols * 3); // Zero it all
+	memset(led_value, 0, leds * 3); // Zero it all
 	is_dirty = true; // Mark buffer dirty
 }
 
-void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value) {
-	if (col < cols && row < rows) {
-		led_value[3 * (col + (cols * row)) + led] = value;
+void setLedValue(uint16_t led, uint8_t col, uint8_t value) {
+	if (led < leds) {
+		led_value[3 * led + col] = value;
 		is_dirty = true; // Mark buffer dirty
 	}
 }
 
 // Just throw values into led_value array - the dma interrupt will
 // handle updating the dma buffer when needed
-void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b) {
-	if (col < cols && row < rows) {
-		led_value[3 * (col + (cols * row)) + RL] = r;
-		led_value[3 * (col + (cols * row)) + GL] = g;
-		led_value[3 * (col + (cols * row)) + BL] = b;
+void setLedValues(uint16_t led, uint8_t r, uint8_t g, uint8_t b) {
+	if (led < leds) {
+		led_value[3 * led + RL] = r;
+		led_value[3 * led + GL] = g;
+		led_value[3 * led + BL] = b;
 		is_dirty = true; // Mark buffer dirty
 	}
 }
 
 uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
-		uint16_t init_rows, uint16_t init_cols) {
+		uint16_t init_leds) {
 
 	// Store timer handle for later
 	timer = init_timer;
@@ -187,13 +181,12 @@ uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
 	// Store channel
 	channel = init_channel;
 
-	rows = init_rows;
-	cols = init_cols;
+	leds = init_leds;
 
-	led_value = malloc(rows * cols * 3);
+	led_value = malloc(leds * 3);
 	if (led_value != NULL) { // Memory for led values
 
-		memset(led_value, 0, rows * cols * 3); // Zero it all
+		memset(led_value, 0, leds * 3); // Zero it all
 
 		// Start DMA to feed the PWM with values
 		// At this point the buffer should be empty - all zeros
