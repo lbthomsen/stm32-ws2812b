@@ -50,15 +50,15 @@ typedef struct {
 } ws2823b_init_TypeDef;
 
 uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
-		uint16_t init_rows, uint16_t init_cols);
+		uint16_t init_leds);
 
 // Set all led values to zero
 void zeroLedValues();
 
 // Set a single led value
-void setLedValue(uint8_t col, uint8_t row, uint8_t led, uint8_t value);
+void setLedValue(uint16_t led, uint8_t color, uint8_t value);
 
 // Set values of all 3 leds
-void setLedValues(uint8_t col, uint8_t row, uint8_t r, uint8_t g, uint8_t b);
+void setLedValues(uint16_t led, uint8_t r, uint8_t g, uint8_t b);
 
 #endif // _WS2812B_H
