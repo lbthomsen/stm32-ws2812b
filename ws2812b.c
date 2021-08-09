@@ -33,7 +33,7 @@
 TIM_HandleTypeDef *timer;
 uint32_t channel;
 
-// Rows and cols - set by init
+// Number of leds - set by init
 uint16_t leds = 0;
 
 // The actual DMA buffer - contains two halves each containing 24 bytes - 48 bytes in total.
