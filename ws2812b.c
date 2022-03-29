@@ -5,7 +5,7 @@
  ******************************************************************************
  * @attention
  *
- * <h2><center>&copy; Copyright (c) 2020 Lars Boegild Thomsen <lbthomsen@gmail.com>.
+ * <h2><center>&copy; Copyright (c) 2022 Lars Boegild Thomsen <lbthomsen@gmail.com>.
  * All rights reserved.</center></h2>
  *
  * This software component is licensed by lbthomsen under MIT license,
