@@ -198,3 +198,7 @@ uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel,
 	}
 
 }
+
+/* 
+ * vim: ts=4 nowrap
+ */

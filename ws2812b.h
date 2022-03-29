@@ -62,3 +62,7 @@ void setLedValue(uint16_t led, uint8_t color, uint8_t value);
 void setLedValues(uint16_t led, uint8_t r, uint8_t g, uint8_t b);
 
 #endif // _WS2812B_H
+
+/* 
+ * vim: ts=4 nowrap
+ */

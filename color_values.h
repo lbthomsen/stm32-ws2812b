@@ -1,8 +1,8 @@
 /*
  * color_values.h
  *
- *  Created on: Jan 2, 2021
- *      Author: lth
+ * Copyright (c) 2022 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * 
  */
 
 #ifndef COLOR_VALUES_H_
