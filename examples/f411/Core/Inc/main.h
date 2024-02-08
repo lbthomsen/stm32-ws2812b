@@ -64,6 +64,8 @@ void Error_Handler(void);
 #define LED_CNT 119
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define BUFF_Pin GPIO_PIN_0
+#define BUFF_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 #ifdef DEBUG
