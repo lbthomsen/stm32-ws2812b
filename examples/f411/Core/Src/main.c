@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ws2812b.h"
+#include "ws2812_demos.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LEDS 64
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,11 +48,11 @@ DMA_HandleTypeDef hdma_tim4_ch2;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-const uint8_t patterns[4][3] = {
-        { 24, 0, 0 },
-        { 0, 24, 0 },
-        { 0, 0, 24 },
-        { 10, 0, 24 }
+const uint8_t patterns[][3] = {
+        { 0xff, 0, 0 },
+        { 0, 0xff, 0 },
+        { 0, 0, 0xff },
+        { 0xa0, 0x00, 0xf0 }
 };
 
 uint8_t pattern = 0;
@@ -120,30 +121,22 @@ int main(void)
 
     ws2812b_init(&htim4, TIM_CHANNEL_1, 64);
 
+    ws2812_demos_set(1);
+
+    //setLedValues ( 1, 0x00, 0x00, 0xf );
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-    uint32_t now = 0, last_blink = 0, last_tick = 0, last_pattern = 0, loop_count = 0;
+    uint32_t now = 0, last_blink = 0, last_tick = 0, loop_count = 0;
 
     while (1) {
 
         now = HAL_GetTick();
 
-        if (now - last_pattern >= 200) {
-
-            for (uint8_t led = 0; led < LEDS; ++led) {
-                setLedValues(led, patterns[pattern][0], patterns[pattern][1], patterns[pattern][2]);
-            }
-
-            ++pattern;
-
-            if (pattern >= sizeof(patterns) / sizeof(patterns[0]))
-                pattern = 0;
-
-            last_pattern = now;
-        }
+        ws2812_demos_tick();
 
         if (now - last_blink >= 500) { // Every 500 ms
             HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);

@@ -21,7 +21,7 @@
 
 // Look up table for led color bit patterns.  "Waste" 4k of flash but is a
 // lot faster (not measured accurately but I'd say about double) than bit
-// manipulation.
+// manipulation.  I'd love to hear if someone got a better idea ;)
 const uint16_t color_value[256][8] = {
         { LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF },
         { LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_OFF, LED_ON },
