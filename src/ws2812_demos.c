@@ -51,7 +51,7 @@ void ws2812_demos_tick() {
             setLedValues(line_led, led_line_colors[line_color][0], led_line_colors[line_color][1], led_line_colors[line_color][2]);
             ++line_led;
             ++line_count;
-            if (line_count % 256 == 0)
+            if (line_count % 32 == 0)
                 ++line_color;
             if (line_color >= sizeof(led_line_colors) / sizeof(led_line_colors[0]))
                 line_color = 0;
