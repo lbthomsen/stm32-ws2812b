@@ -39,9 +39,6 @@ uint16_t leds = 0;
 // Used directly by the stm32 hardware to control pwm.
 uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
 
-// Pointer to above buffer.  This will be set to the start or the half way point in turn
-uint16_t *dma_buffer_pointer;
-
 // LED RGB values - malloc'ed in init when size is known.  3 bytes per led.
 uint8_t *led_value;
 
@@ -60,7 +57,7 @@ bool is_dirty = false;     // Dirty is set true when led_value array is updated.
  * this function is handled by the dma callbacks.
  *
  */
-static inline void update_next_buffer() {
+static inline void update_buffer(uint16_t *dma_buffer_pointer) {
 
 #ifdef BUFF_GPIO_Port
 	HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
@@ -75,7 +72,7 @@ static inline void update_next_buffer() {
         // This one is simple - we got a bunch of zeros of the right size - just throw
         // that into the buffer.  Twice will do (two half buffers).
         if (zero_halves < 2) {
-            memset(dma_buffer_pointer, 0, 48); // Fill the buffer with zeros
+            memset(dma_buffer_pointer, 0, 2 * BUFFER_SIZE); // Fill the buffer with zeros
             zero_halves++; // We only need to update two half buffers
         }
 
@@ -98,7 +95,7 @@ static inline void update_next_buffer() {
             led_state = LED_DAT; // when dirty - start processing data
         }
 
-    } else { // LED state
+    } else { // LED_DAT
 
         // First let's deal with the current LED
         uint8_t *led = (uint8_t*) &led_value[3 * led_cnt];
@@ -132,8 +129,7 @@ static inline void update_next_buffer() {
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
 
     if (htim->Instance == timer->Instance) {
-        dma_buffer_pointer = &dma_buffer[0];
-        update_next_buffer();
+        update_buffer(&dma_buffer[0]);
     }
 
 }
@@ -142,8 +138,7 @@ void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
     if (htim->Instance == timer->Instance) {
-        dma_buffer_pointer = &dma_buffer[BUFFER_SIZE];
-        update_next_buffer();
+        update_buffer(&dma_buffer[BUFFER_SIZE]);
     }
 
 }
@@ -188,8 +183,7 @@ uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint1
 
         // Start DMA to feed the PWM with values
         // At this point the buffer should be empty - all zeros
-        HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer,
-        BUFFER_SIZE * 2);
+        HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer, BUFFER_SIZE * 2);
         return WS2812B_INIT_OK;
     } else {
         return WS2812B_INIT_MEM;

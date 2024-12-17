@@ -43,15 +43,14 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim4;
 DMA_HandleTypeDef hdma_tim4_ch1;
-DMA_HandleTypeDef hdma_tim4_ch2;
 
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 const uint8_t patterns[][3] = {
-        { 0xff, 0, 0 },
-        { 0, 0xff, 0 },
-        { 0, 0, 0xff },
+        { 0x0f, 0, 0 },
+        { 0, 0x0f, 0 },
+        { 0, 0, 0x0f },
         { 0xa0, 0x00, 0xf0 }
 };
 
@@ -90,6 +89,7 @@ int _write(int fd, char *ptr, int len) {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -245,10 +245,6 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
@@ -272,7 +268,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 921600;
+  huart1.Init.BaudRate = 2000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -302,9 +298,6 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
-  /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
 
 }
 

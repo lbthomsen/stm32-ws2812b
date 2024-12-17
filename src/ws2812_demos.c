@@ -37,27 +37,30 @@ void ws2812_demos_set(uint8_t demo) {
 
 void ws2812_demos_tick() {
 
+    static const led_interval = 20;
+
     static uint16_t line_led = 0;
     static uint32_t line_count = 0;
     static uint8_t line_color = 0;
-    static uint32_t last_led = 0;
+    static uint32_t next_led = led_interval;
 
-    uint32_t now = HAL_GetTick();
+    uint32_t now = uwTick;
 
     switch (active_demo) {
     case WS2812_DEMO_LINE:
-        if (now - last_led >= 10) {
+        if (now >= next_led) {
             zeroLedValues();
             setLedValues(line_led, led_line_colors[line_color][0], led_line_colors[line_color][1], led_line_colors[line_color][2]);
             ++line_led;
             ++line_count;
-            if (line_count % 32 == 0)
+            if (line_count % 64 == 0)
                 ++line_color;
             if (line_color >= sizeof(led_line_colors) / sizeof(led_line_colors[0]))
                 line_color = 0;
             if (line_led >= LEDS)
                 line_led = 0;
-            last_led = now;
+
+            next_led = now + led_interval;
         }
         break;
     default:
