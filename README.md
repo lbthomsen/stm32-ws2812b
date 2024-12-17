@@ -11,4 +11,6 @@ STM32 Library for WS2812 using DMA+PWM
 
 ![include paths](https://raw.githubusercontent.com/lbthomsen/stm32-ws2812/master/images/tim3_gpio.png)
 
+The "Counter value" is the most important value.  It need to divide the timer clock so that the resulting PWM frequency is exactly 800 kHz.
+
 ![include paths](https://raw.githubusercontent.com/lbthomsen/stm32-ws2812/master/images/tim3_params.png)
