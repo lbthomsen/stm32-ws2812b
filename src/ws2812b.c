@@ -55,7 +55,6 @@ bool is_dirty = false;     // Dirty is set true when led_value array is updated.
  * Update next 24 bits in the dma buffer - assume dma_buffer_pointer is pointing
  * to the buffer that is safe to update.  The dma_buffer_pointer and the call to
  * this function is handled by the dma callbacks.
- *
  */
 static inline void update_buffer(uint16_t *dma_buffer_pointer) {
 
