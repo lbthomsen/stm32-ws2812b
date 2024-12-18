@@ -15,10 +15,10 @@
  ******************************************************************************
  */
 
-#include <ws2812.h>
-#include "ws2812_demos.h"
-
 #include "main.h"
+
+#include "ws2812.h"
+#include "ws2812_demos.h"
 
 
 uint8_t active_demo = 0;
@@ -33,13 +33,13 @@ const uint8_t led_line_colors[][3] = {
         { 128, 128, 128 }
 };
 
-void ws2812_demos_set(uint8_t demo) {
+void ws2812_demos_set(ws2812_handleTypeDef *ws2812, uint8_t demo) {
     active_demo = demo;
 }
 
-void ws2812_demos_tick() {
+void ws2812_demos_tick(ws2812_handleTypeDef *ws2812) {
 
-    static const led_interval = 20;
+    static const uint32_t led_interval = 20;
 
     static uint16_t line_led = 0;
     static uint32_t line_count = 0;
@@ -51,8 +51,8 @@ void ws2812_demos_tick() {
     switch (active_demo) {
     case WS2812_DEMO_LINE:
         if (now >= next_led) {
-            zeroLedValues();
-            setLedValues(line_led, led_line_colors[line_color][0], led_line_colors[line_color][1], led_line_colors[line_color][2]);
+            zeroLedValues(ws2812);
+            setLedValues(ws2812, line_led, led_line_colors[line_color][0], led_line_colors[line_color][1], led_line_colors[line_color][2]);
             ++line_led;
             ++line_count;
             if (line_count % 64 == 0)

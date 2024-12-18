@@ -18,6 +18,8 @@
 #ifndef __WS2812_H
 #define __WS2812_H
 
+#include "main.h"
+
 // Buffer allocated will be twice this
 #define BUFFER_SIZE 24
 
@@ -26,42 +28,50 @@
 #define LED_ON 2 * LED_CNT / 3 + 2
 #define LED_RESET_CYCLES 10 // Full 24-bit cycles
 
-// Define LED driver state machine states
-#define LED_RES 0 // Reset
-#define LED_IDL 1 // Idle
-#define LED_DAT 2 // Transfer data
-
 #define GL 0 // Green LED
 #define RL 1 // Red LED
 #define BL 2 // Blue LED
 
-#define WS2812B_INIT_OK 0
-#define WS2812B_INIT_MEM 1
+typedef enum {
+    WS2812_Ok,
+    WS2812_Err,
+    WS2812_Mem
+} ws2812_resultTypeDef;
 
-//void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
-//void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim);
+typedef enum {
+    LED_RES = 0,
+    LED_IDL = 1,
+    LED_DAT = 2
+} ws2812_stateTypeDef;
 
 typedef struct {
-    TIM_HandleTypeDef *timer;
-    uint32_t channel;
-    uint16_t dma_buffer[BUFFER_SIZE * 2];
-    uint16_t leds;
-    uint8_t *led;
-    uint8_t led_state;
-} ws2812_TypeDef;
+    TIM_HandleTypeDef *timer;               // Timer running the PWM - MUST run at 800 kHz
+    uint32_t channel;                       // Timer channel
+    uint16_t dma_buffer[BUFFER_SIZE * 2];   // Fixed size DMA buffer
+    uint16_t leds;                          // Number of LEDs on the string
+    uint8_t *led;                           // Dynamically allocated array of LED RGB values
+    ws2812_stateTypeDef led_state;          // LED Transfer state machine
+    //uint8_t led_res;
+    uint8_t led_cnt;
+    uint8_t res_cnt;
+    uint8_t is_dirty;
+    uint8_t zero_halves;
+    uint32_t dma_cbs;
+    uint32_t dat_cbs;
+} ws2812_handleTypeDef;
 
-uint8_t ws2812_init(ws2812_TypeDef *ws2812, TIM_HandleTypeDef *timer, uint32_t channel, uint16_t leds);
+ws2812_resultTypeDef ws2812_init(ws2812_handleTypeDef *ws2812, TIM_HandleTypeDef *timer, uint32_t channel, uint16_t leds);
 
-void ws2812_update_buffer(ws2812_TypeDef *ws2812, uint16_t *dma_buffer_pointer);
+void ws2812_update_buffer(ws2812_handleTypeDef *ws2812, uint16_t *dma_buffer_pointer);
 
 // Set all led values to zero
-void zeroLedValues();
+ws2812_resultTypeDef zeroLedValues(ws2812_handleTypeDef *ws2812);
 
 // Set a single led value
-void setLedValue(uint16_t led, uint8_t color, uint8_t value);
+ws2812_resultTypeDef setLedValue(ws2812_handleTypeDef *ws2812, uint16_t led, uint8_t color, uint8_t value);
 
 // Set values of all 3 leds
-void setLedValues(uint16_t led, uint8_t r, uint8_t g, uint8_t b);
+ws2812_resultTypeDef setLedValues(ws2812_handleTypeDef *ws2812, uint16_t led, uint8_t r, uint8_t g, uint8_t b);
 
 #endif // _WS2812_H
 

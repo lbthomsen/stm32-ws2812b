@@ -21,7 +21,10 @@
 #define WS2812_DEMO_NONE 0
 #define WS2812_DEMO_LINE 1
 
-void ws2812_demos_set(uint8_t demo);
-void ws2812_demos_tick();
+#include "main.h"
+#include "ws2812.h"
+
+void ws2812_demos_set(ws2812_handleTypeDef *ws2812, uint8_t demo);
+void ws2812_demos_tick(ws2812_handleTypeDef *ws2812);
 
 #endif /* WS2812_DEMOS_H_ */
