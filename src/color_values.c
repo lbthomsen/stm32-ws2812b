@@ -16,7 +16,8 @@
  */
 
 #include "main.h"
-#include "ws2812b.h"
+
+#include "ws2812.h"
 #include "color_values.h"
 
 // Look up table for led color bit patterns.  "Waste" 4k of flash but is a

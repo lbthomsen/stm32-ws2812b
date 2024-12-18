@@ -15,9 +15,11 @@
  ******************************************************************************
  */
 
-#include "main.h"
-#include "ws2812b.h"
+#include <ws2812.h>
 #include "ws2812_demos.h"
+
+#include "main.h"
+
 
 uint8_t active_demo = 0;
 

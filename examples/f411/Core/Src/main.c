@@ -21,8 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "ws2812b.h"
 #include "ws2812_demos.h"
+#include "ws2812.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,14 +47,17 @@ DMA_HandleTypeDef hdma_tim4_ch1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-const uint8_t patterns[][3] = {
-        { 0x0f, 0, 0 },
-        { 0, 0x0f, 0 },
-        { 0, 0, 0x0f },
-        { 0xa0, 0x00, 0xf0 }
-};
 
-uint8_t pattern = 0;
+ws2812_TypeDef ws2812;
+
+//const uint8_t patterns[][3] = {
+//        { 0x0f, 0, 0 },
+//        { 0, 0x0f, 0 },
+//        { 0, 0, 0x0f },
+//        { 0xa0, 0x00, 0xf0 }
+//};
+//
+//uint8_t pattern = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +71,7 @@ static void MX_TIM4_Init(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
+
 /* USER CODE BEGIN 0 */
 int _write(int fd, char *ptr, int len) {
     HAL_StatusTypeDef hstatus;
@@ -81,6 +85,25 @@ int _write(int fd, char *ptr, int len) {
     }
     return -1;
 }
+
+// Done sending first half of the DMA buffer - this can now safely be updated
+void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
+
+    if (htim->Instance == TIM4) {
+        ws2812_update_buffer(&ws2812, &ws2812.dma_buffer[0]);
+    }
+
+}
+
+// Done sending the second half of the DMA buffer - this can now be safely updated
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+
+    if (htim->Instance == timer->Instance) {
+        ws2812_update_buffer(&ws2812, &ws2812.dma_buffer[BUFFER_SIZE]);
+    }
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -119,7 +142,7 @@ int main(void)
 
     DBG("WS2812 Demo");
 
-    ws2812b_init(&htim4, TIM_CHANNEL_1, 64);
+    ws2812_init(&ws2812, &htim4, TIM_CHANNEL_1, 64);
 
     ws2812_demos_set(1);
 

@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
- * @file           : ws2812b.c
- * @brief          : Ws2812b library
+ * @file           : ws2812.c
+ * @brief          : Ws2812 library
  ******************************************************************************
  * @attention
  *
@@ -25,25 +25,25 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "ws2812.h"
 #include "color_values.h"
-#include "ws2812b.h"
 
 // Timer handle and channel number
-TIM_HandleTypeDef *timer;
-uint32_t channel;
+//TIM_HandleTypeDef *timer;
+//uint32_t channel;
 
 // Number of leds - set by init
-uint16_t leds = 0;
+//uint16_t leds = 0;
 
 // The actual DMA buffer - contains two halves each containing 24 bytes - 48 bytes in total.
 // Used directly by the stm32 hardware to control pwm.
-uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
+//uint16_t dma_buffer[BUFFER_SIZE * 2] = { 0 };
 
 // LED RGB values - malloc'ed in init when size is known.  3 bytes per led.
 uint8_t *led_value;
 
 // Variables controlling the state machine.
-uint8_t led_state = LED_RES;
+//uint8_t led_state = LED_RES;
 uint8_t res_cnt = 0;
 uint8_t led_cnt = 0;
 
@@ -56,7 +56,7 @@ bool is_dirty = false;     // Dirty is set true when led_value array is updated.
  * to the buffer that is safe to update.  The dma_buffer_pointer and the call to
  * this function is handled by the dma callbacks.
  */
-static inline void update_buffer(uint16_t *dma_buffer_pointer) {
+inline void ws2812_update_buffer(ws2812_TypeDef *ws2812, uint16_t *dma_buffer_pointer) {
 
 #ifdef BUFF_GPIO_Port
 	HAL_GPIO_WritePin(BUFF_GPIO_Port, BUFF_Pin, GPIO_PIN_SET);
@@ -124,24 +124,6 @@ static inline void update_buffer(uint16_t *dma_buffer_pointer) {
 
 }
 
-// Done sending first half of the DMA buffer - this can now safely be updated
-void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
-
-    if (htim->Instance == timer->Instance) {
-        update_buffer(&dma_buffer[0]);
-    }
-
-}
-
-// Done sending the second half of the DMA buffer - this can now be safely updated
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
-
-    if (htim->Instance == timer->Instance) {
-        update_buffer(&dma_buffer[BUFFER_SIZE]);
-    }
-
-}
-
 void zeroLedValues() {
     memset(led_value, 0, leds * 3); // Zero it all
     is_dirty = true; // Mark buffer dirty
@@ -165,27 +147,27 @@ void setLedValues(uint16_t led, uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
-uint8_t ws2812b_init(TIM_HandleTypeDef *init_timer, uint32_t init_channel, uint16_t init_leds) {
+uint8_t ws2812_init(ws2812_TypeDef *ws2812, TIM_HandleTypeDef *timer, uint32_t channel, uint16_t leds) {
 
     // Store timer handle for later
-    timer = init_timer;
+    ws2812->timer = timer;
 
     // Store channel
-    channel = init_channel;
+    ws2812->channel = channel;
 
-    leds = init_leds;
+    ws2812->leds = leds;
 
-    led_value = malloc(leds * 3);
-    if (led_value != NULL) { // Memory for led values
+    ws2812->led = malloc(leds * 3);
+    if (ws2812->led != NULL) { // Memory for led values
 
-        memset(led_value, 0, leds * 3); // Zero it all
+        memset(ws2812->led, 0, leds * 3); // Zero it all
 
         // Start DMA to feed the PWM with values
         // At this point the buffer should be empty - all zeros
-        HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*) dma_buffer, BUFFER_SIZE * 2);
-        return WS2812B_INIT_OK;
+        HAL_TIM_PWM_Start_DMA(timer, channel, (uint32_t*)ws2812->dma_buffer, BUFFER_SIZE * 2);
+        return WS2812_INIT_OK;
     } else {
-        return WS2812B_INIT_MEM;
+        return WS2812_INIT_MEM;
     }
 
 }
