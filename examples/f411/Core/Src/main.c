@@ -158,7 +158,9 @@ int main(void)
 
         now = uwTick;
 
-        ws2812_demos_tick(&ws2812);
+        if (!(now % 10)) {
+            ws2812_demos_tick(&ws2812);
+        }
 
         if (now >= next_blink) { // Every 500 ms
             HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
