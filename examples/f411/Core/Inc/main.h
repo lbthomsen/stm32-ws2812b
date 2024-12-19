@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define LED_CNT 125
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define BTN_Pin GPIO_PIN_0
+#define BTN_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 #define LEDS 64

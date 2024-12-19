@@ -48,16 +48,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-ws2812_handleTypeDef ws2812;
+ws2812_handleTypeDef ws2812; // The WS2812 panel handler
 
-//const uint8_t patterns[][3] = {
-//        { 0x0f, 0, 0 },
-//        { 0, 0x0f, 0 },
-//        { 0, 0, 0x0f },
-//        { 0xa0, 0x00, 0xf0 }
-//};
-//
-//uint8_t pattern = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -145,8 +137,6 @@ int main(void)
 
     ws2812_demos_set(&ws2812, 1);
 
-    //setLedValues ( 1, 0x00, 0x00, 0xf );
-
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -158,7 +148,7 @@ int main(void)
 
         now = uwTick;
 
-        if (!(now % 10)) {
+        if (!(now % 10)) { // Just call every 10th loop
             ws2812_demos_tick(&ws2812);
         }
 
@@ -351,6 +341,12 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : BTN_Pin */
+    GPIO_InitStruct.Pin = BTN_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(BTN_GPIO_Port, &GPIO_InitStruct);
 
     /* USER CODE BEGIN MX_GPIO_Init_2 */
     /* USER CODE END MX_GPIO_Init_2 */
